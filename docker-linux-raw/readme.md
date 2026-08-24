@@ -51,7 +51,6 @@ curl -fsSL https://raw.githubusercontent.com/bigstateio/provisioning/main/docker
 Runnable example:
 
 ```sh
-BIGSTATE_INSTALL_DIR=/opt/bigstate BUILD_VERSION=latest \
 curl -fsSL https://raw.githubusercontent.com/bigstateio/provisioning/main/docker-linux-raw/install.sh | sh -s -- \
   --edge-public-key 49BE291110EF0B93DFA0666C589002C748651D5FC727A1C5A1CDDEAF832EFC1D \
   --edge-private-key 30379AA00EAE7B02F8367A6702EB1F6FFACB6F7F2155CAD9F951B236B6FFC752
