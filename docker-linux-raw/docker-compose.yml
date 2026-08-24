@@ -1,0 +1,76 @@
+networks:
+  bigstate-edge-network:
+    name: bigstate-edge-network
+    driver: bridge
+    external: false
+
+services:
+
+  bigstate-redis:
+    image: redis:7.4.2
+    ports:
+      - '127.0.0.1:6380:6379'
+    command: redis-server --save 60 1
+    volumes:
+      - ./redis-data:/data
+    networks:
+        - bigstate-edge-network
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  bigstate-api:
+    image: bigstateio/api:${BUILD_VERSION:-latest}
+    pull_policy: always
+    ports:
+        - "0.0.0.0:17080:7080"
+    volumes:
+      - $API_LOG_PATH:/logs
+      - $API_VALUE_PATH:/values
+    environment:
+      - BUILD_VERSION=${BUILD_VERSION:-latest}
+      - BIGSTATE_NODE=1
+      - BIGSTATE_CONTAINER=1
+      - REDIS_HOST=bigstate-redis:6379
+      - ELASTICSEARCH_HOST=
+      - POSTGRES_CS=Host=bigstate-postgres;Database=bs;Username=postgres;Password=Str0ng!
+      - BIGSTATE_DELIVERY_WS_GRPC_URL=http://bigstate-delivery-ws:7091
+      - NODE_PUBLIC_KEY=${EDGE_PUBLIC_KEY}
+      - NODE_PRIVATE_KEY=${EDGE_PRIVATE_KEY}
+      - VALUE_PATH=/values
+      - TRUSTED_EDGE_1=
+      - TRUSTED_EDGE_2=
+      - POC=false
+      - V1=true
+    networks:
+        - bigstate-edge-network
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  bigstate-delivery-ws:
+    image: bigstateio/delivery.ws:${BUILD_VERSION:-latest}
+    pull_policy: always
+    ports:
+        - "0.0.0.0:17090:7090"
+    volumes:
+      - $DELIVERY_WS_LOG_PATH:/logs
+    environment:
+      - BUILD_VERSION=${BUILD_VERSION:-latest}
+      - BIGSTATE_NODE=1
+      - BIGSTATE_CONTAINER=1
+      - REDIS_HOST=bigstate-redis:6379
+      - BIGSTATE_API_URL=http://bigstate-api:7081
+      - POC=true
+      - V1=true
+    networks:
+        - bigstate-edge-network
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
